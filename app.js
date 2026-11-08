@@ -246,7 +246,30 @@
       '<div class="profile-print-footer">BUKEDEA COMPREHENSIVE SCHOOL · KNOWLEDGE &amp; INNOVATION · P.O. Box 195, Bukedea, Eastern Uganda</div></div>';
   };
   window.closeStudentProfile = function(){const p=$("studentProfilePanel");if(p)p.hidden=true;document.body.classList.remove("student-profile-print-mode");};
-  window.printStudentProfile = function(){document.body.classList.add("student-profile-print-mode");window.print();setTimeout(()=>document.body.classList.remove("student-profile-print-mode"),800);};
+  window.printStudentProfile = function(){
+    const panel=$("studentProfilePanel");
+    const sheet=panel?.querySelector(".student-profile-sheet");
+    if(!sheet){alert("The student profile has not finished loading. Please wait and try again.");return;}
+    const frame=document.createElement("iframe");
+    frame.setAttribute("title","Student profile print preview");
+    frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none";
+    const styles=[...document.querySelectorAll("style")].map(x=>x.textContent).join("\n");
+    const copy=sheet.cloneNode(true);
+    copy.querySelectorAll(".profile-actions").forEach(x=>x.remove());
+    const html="<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Student Profile</title><style>"+styles+"\n"+
+      "body{margin:0;padding:12mm;background:#fff;color:#111;font-family:Arial,sans-serif}.student-profile-sheet{display:block!important;width:100%;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}.profile-section{break-inside:avoid;page-break-inside:avoid;margin:14px 0}.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.profile-field{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #bbb!important;padding:8px!important}.profile-field small{display:block;color:#444!important}.profile-field b{color:#111!important}.tablewrap{overflow:visible!important}table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #bbb;padding:5px;color:#111!important}h2,h3{color:#075b60}img{max-width:100%}.profile-print-footer{margin-top:18px;border-top:1px solid #bbb;padding-top:10px;text-align:center;font-size:10px}@page{size:auto;margin:0}"+
+      "</style></head><body><main id='studentProfilePanel'>"+copy.outerHTML+"</main></body></html>";
+    document.body.appendChild(frame);
+    frame.onload=function(){
+      try{
+        frame.contentWindow.onafterprint=function(){frame.remove();};
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+        setTimeout(()=>{if(frame.isConnected)frame.remove();},60000);
+      }catch(error){frame.remove();alert("Unable to open the print preview: "+error.message);}
+    };
+    frame.srcdoc=html;
+  };
 
   window.addStudent = function () {
     const panel = $("studentFormPanel");
