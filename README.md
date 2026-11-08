@@ -36,14 +36,14 @@ The school identity and contact details are preloaded from the school's public w
 Official fee schedules, current academic dates, subject combinations, grading scales and student/staff records are not invented or preloaded; they must be confirmed by school leadership.
 
 ## First administrator setup
-1. Open the portal and create the first account using the school's nominated administrator email.
+1. Open the portal and create the first account using `info@bukedeacomprehensive.ac.ug` (only if the school controls this mailbox and has approved its use).
 2. Confirm the email and sign in once so Supabase creates the profile.
 3. In Supabase SQL Editor, promote that account using its exact approved email:
 
 ```sql
 update public.profiles
 set role = 'school_admin', full_name = 'School Administrator'
-where lower(email) = lower('REPLACE-WITH-APPROVED-SCHOOL-ADMIN-EMAIL');
+where lower(email) = lower('info@bukedeacomprehensive.ac.ug');
 ```
 
 4. Sign out and sign back in. Do not promote an account until the school has approved its owner. Never share passwords or secret keys.
