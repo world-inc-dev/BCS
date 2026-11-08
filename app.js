@@ -93,7 +93,7 @@
     const body = $("studentsBody");
     body.innerHTML = '<tr><td colspan="4" class="empty">Loading authorised student records…</td></tr>';
     const r = await db.from("students")
-      .select("id,student_no,first_name,middle_name,last_name,status,enrollments(classes(name))")
+      .select("id,student_no,first_name,middle_name,last_name,sex,date_of_birth,admission_date,status,address,photo_url,medical_notes,guardian_name,guardian_relationship,guardian_phone,guardian_alt_phone,guardian_email,guardian_address,father_name,father_phone,mother_name,mother_phone,emergency_contact_name,emergency_contact_relationship,emergency_contact_phone,former_school,former_school_address,former_school_contact,previous_class,last_school_year,transfer_certificate_no,boarding_status,transport_details,enrollments(classes(name))")
       .order("last_name");
     if (r.error) {
       body.innerHTML = '<tr><td colspan="4" class="empty">Unable to load records: ' + safe(r.error.message) + '</td></tr>';
