@@ -113,9 +113,74 @@
       "<tr><td><b>" + safe([s.first_name,s.middle_name,s.last_name].filter(Boolean).join(" ")) +
       "</b></td><td>" + safe(s.student_no) + "</td><td>" +
       safe(s.enrollments && s.enrollments[0] && s.enrollments[0].classes ? s.enrollments[0].classes.name : "Not enrolled") +
-      '</td><td><span class="pill">' + safe(s.status) + "</span></td></tr>"
+      '</td><td><span class="pill">' + safe(s.status) + '</span> <button class="btn small secondary" type="button" onclick="openStudentProfile(\'' + safe(s.id) + '\')">View profile</button></td></tr>'
     ).join("") || '<tr><td colspan="4" class="empty">No matching authorised records.</td></tr>';
   };
+
+  const profileField = (label, value) => '<div class="profile-field"><small>' + label + '</small><b>' + (value ? safe(String(value)) : '<span class="muted">Not provided</span>') + '</b></div>';
+  const profileSection = (title, content) => '<section class="profile-section"><h3>' + title + '</h3>' + content + '</section>';
+  const profileRows = (rows, empty) => rows.length ? '<div class="tablewrap"><table><tbody>' + rows.join('') + '</tbody></table></div>' : '<p class="muted">' + empty + '</p>';
+
+  window.openStudentProfile = async function (studentId) {
+    const panel = $("studentProfilePanel");
+    if (!panel) return;
+    const student = currentStudents.find(s => s.id === studentId);
+    if (!student) { panel.hidden = false; panel.innerHTML = '<p class="notice">Student record is not available in the current authorised list. Refresh and try again.</p>'; return; }
+    panel.hidden = false;
+    panel.innerHTML = '<div class="card"><p class="muted">Loading complete student profile…</p></div>';
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
+    const sid = student.id;
+    const jobs = await Promise.all([
+      db.from("enrollments").select("id,class_id,academic_year_id,roll_number,status,enrolled_on").eq("student_id",sid).order("enrolled_on",{ascending:false}),
+      db.from("attendance").select("attendance_date,session,status,notes").eq("student_id",sid).order("attendance_date",{ascending:false}).limit(30),
+      db.from("assessment_results").select("score,teacher_comment,created_at,assessments(title,assessment_type,max_score,assessment_date,subjects(name),terms(name))").eq("student_id",sid).order("created_at",{ascending:false}).limit(50),
+      db.from("student_invoices").select("id,invoice_no,description,amount_due,due_date,issued_at").eq("student_id",sid).order("issued_at",{ascending:false}),
+      db.from("payment_records").select("invoice_id,receipt_no,amount,payment_method,payment_reference,received_at,notes").eq("student_id",sid).order("received_at",{ascending:false})
+    ]);
+    const [enr,att,marks,inv,pay] = jobs.map(x=>x.data||[]);
+    const errs = jobs.map((x,i)=>x.error?["Class history","Attendance","Academic results","Fee invoices","Recorded payments"][i]+": "+x.error.message:null).filter(Boolean);
+    const classIds=[...new Set(enr.map(x=>x.class_id).filter(Boolean))], yearIds=[...new Set(enr.map(x=>x.academic_year_id).filter(Boolean))];
+    let classes=[],years=[];
+    if(classIds.length){const x=await db.from("classes").select("id,name,level,stream").in("id",classIds);classes=x.data||[];if(x.error)errs.push("Class names: "+x.error.message);}
+    if(yearIds.length){const x=await db.from("academic_years").select("id,name").in("id",yearIds);years=x.data||[];if(x.error)errs.push("Academic years: "+x.error.message);}
+    const byId=(arr,id)=>arr.find(x=>x.id===id);
+    const invoicesById=new Map(inv.map(x=>[x.id,x]));
+    const paidByInvoice=new Map(); pay.forEach(x=>{if(x.invoice_id)paidByInvoice.set(x.invoice_id,(paidByInvoice.get(x.invoice_id)||0)+Number(x.amount||0));});
+    const invoiceTotal=inv.reduce((n,x)=>n+Number(x.amount_due||0),0);
+    const allocated=pay.reduce((n,x)=>n+Number(x.invoice_id?x.amount:0),0);
+    const unallocated=pay.reduce((n,x)=>n+Number(x.invoice_id?0:x.amount),0);
+    const outstanding=inv.reduce((n,x)=>n+Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)),0);
+    const fmt=n=>"UGX "+Number(n||0).toLocaleString("en-UG");
+    const fullName=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(" ");
+    const personal=[
+      ["Admission number",student.student_no],["Full name",fullName],["Sex",student.sex],["Date of birth",student.date_of_birth],["Admission date",student.admission_date],["Status",student.status],["Home address",student.address],["Boarding status",student.boarding_status],["Transport / pickup",student.transport_details],["Medical notes",student.medical_notes]
+    ].map(([k,v])=>profileField(k,v)).join("");
+    const guardian=[
+      ["Primary parent / guardian",student.guardian_name],["Relationship",student.guardian_relationship],["Primary phone",student.guardian_phone],["Alternative phone",student.guardian_alt_phone],["Email",student.guardian_email],["Address",student.guardian_address],["Father",student.father_name],["Father's phone",student.father_phone],["Mother",student.mother_name],["Mother's phone",student.mother_phone],["Emergency contact",student.emergency_contact_name],["Emergency relationship",student.emergency_contact_relationship],["Emergency phone",student.emergency_contact_phone]
+    ].map(([k,v])=>profileField(k,v)).join("");
+    const previous=[
+      ["Former school",student.former_school],["Former school location",student.former_school_address],["Former school contact",student.former_school_contact],["Previous class",student.previous_class],["Last school year",student.last_school_year],["Transfer certificate",student.transfer_certificate_no]
+    ].map(([k,v])=>profileField(k,v)).join("");
+    const enrolRows=enr.map(x=>{const c=byId(classes,x.class_id),y=byId(years,x.academic_year_id);return '<tr><td>'+safe(c?.name||"Class unavailable")+(c?.stream?' · '+safe(c.stream):'')+'</td><td>'+safe(y?.name||"Year unavailable")+'</td><td>'+safe(x.roll_number||"—")+'</td><td>'+safe(x.status||"—")+'</td><td>'+safe(x.enrolled_on||"—")+'</td></tr>';});
+    const attRows=att.map(x=>'<tr><td>'+safe(x.attendance_date)+'</td><td>'+safe(x.session||"—")+'</td><td>'+safe(x.status)+'</td><td>'+safe(x.notes||"—")+'</td></tr>');
+    const markRows=marks.map(x=>{const a=x.assessments||{};return '<tr><td>'+safe(a.title||"Assessment")+'</td><td>'+safe(a.subjects?.name||"—")+'</td><td>'+safe(a.terms?.name||"—")+'</td><td>'+safe(x.score)+' / '+safe(a.max_score||"—")+'</td><td>'+safe(a.assessment_date||"—")+'</td><td>'+safe(x.teacher_comment||"—")+'</td></tr>';});
+    const invoiceRows=inv.map(x=>'<tr><td>'+safe(x.invoice_no||"—")+'</td><td>'+safe(x.description||"—")+'</td><td>'+safe(x.due_date||"—")+'</td><td>'+fmt(x.amount_due)+'</td><td>'+fmt(paidByInvoice.get(x.id)||0)+'</td><td>'+fmt(Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)))+'</td></tr>');
+    const paymentRows=pay.map(x=>'<tr><td>'+safe(x.received_at||"—")+'</td><td>'+safe(x.receipt_no||"—")+'</td><td>'+safe(x.payment_method||"—")+'</td><td>'+safe(x.payment_reference||"—")+'</td><td>'+fmt(x.amount)+'</td><td>'+safe(x.notes||"—")+'</td></tr>');
+    panel.innerHTML='<div class="card student-profile-sheet"><div class="student-profile-head"><div><div class="eyebrow">Bukedea Comprehensive School</div><h2>'+safe(fullName)+'</h2><p class="muted">Student profile · '+safe(student.student_no)+'</p><b>KNOWLEDGE &amp; INNOVATION</b></div><div class="profile-actions"><button class="btn small" onclick="printStudentProfile()">Print profile</button><button class="btn small secondary" onclick="closeStudentProfile()">Close</button></div></div>'+
+      (student.photo_url?'<img class="student-profile-photo" src="'+safe(student.photo_url)+'" alt="Student photograph" onerror="this.style.display=\'none\'">':'')+
+      profileSection("Personal and admission information",'<div class="profile-fields">'+personal+'</div>')+
+      profileSection("Parent, guardian and emergency contacts",'<div class="profile-fields">'+guardian+'</div>')+
+      profileSection("Previous school history",'<div class="profile-fields">'+previous+'</div>')+
+      profileSection("Class and enrolment history",profileRows(enrolRows,"No class enrolments have been recorded."))+
+      profileSection("Attendance history (latest 30 entries)",profileRows(attRows,"No attendance records have been recorded."))+
+      profileSection("Academic performance (latest 50 results)",profileRows(markRows,"No assessment results have been recorded."))+
+      profileSection("Fees and account summary",'<div class="profile-fields">'+profileField("Total invoiced",fmt(invoiceTotal))+profileField("Payments allocated",fmt(allocated))+profileField("Unallocated receipts",fmt(unallocated))+profileField("Outstanding invoice balance",fmt(outstanding))+'</div>'+profileRows(invoiceRows,"No fee invoices have been recorded."))+
+      profileSection("Recorded payment history",profileRows(paymentRows,"No fee payments have been recorded."))+
+      (errs.length?'<div class="notice">Some profile sections could not be loaded: '+errs.map(safe).join(" · ")+'</div>':'')+
+      '<div class="profile-print-footer">BUKEDEA COMPREHENSIVE SCHOOL · KNOWLEDGE &amp; INNOVATION · P.O. Box 195, Bukedea, Eastern Uganda</div></div>';
+  };
+  window.closeStudentProfile = function(){const p=$("studentProfilePanel");if(p)p.hidden=true;document.body.classList.remove("student-profile-print-mode");};
+  window.printStudentProfile = function(){document.body.classList.add("student-profile-print-mode");window.print();setTimeout(()=>document.body.classList.remove("student-profile-print-mode"),800);};
 
   window.addStudent = function () {
     const panel = $("studentFormPanel");
