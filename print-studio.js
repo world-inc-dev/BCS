@@ -18,7 +18,7 @@
  function badge(){return localStorage.getItem(badgeKey)||window.BCS_BADGE_DATA_URL||"";}
  function logo(size=76){const u=badge();return u?'<img class="ps-logo" src="'+esc(u)+'" alt="School badge">':'<div class="ps-logo-fallback">BCS</div>';}
  function header(title,ref){return '<header class="ps-head">'+logo()+'<div class="ps-school"><h1>'+esc(school.name)+'</h1><div class="ps-motto">'+esc(school.motto)+'</div><div>'+esc(school.address)+'</div><div>'+esc(school.phone)+' · '+esc(school.email)+'</div></div><div class="ps-ref">'+esc(ref||"OFFICIAL SCHOOL RECORD")+'</div></header><div class="ps-doc-title">'+esc(title)+'</div>';}
- function footer(){return '<footer class="ps-foot"><b>'+esc(school.motto)+'</b><br>Knowledge · Discipline · Service<br>Prepared through the BCS Digital Campus · Developed by BridanX Tech LLC</footer>';}
+ function footer(){return '<footer class="ps-foot"><b>'+esc(school.motto)+'</b><br>Prepared through the BCS Digital Campus · Developed by BridanX Tech LLC</footer>';}
  function watermark(){return '<div class="ps-watermark">'+logo()+'</div>';}
  function table(headers,rows){return '<table class="ps-table"><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join("")+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join("")+'</tr>').join(""):'<tr><td colspan="'+headers.length+'" class="ps-empty">No records available for this selection.</td></tr>')+'</tbody></table>';}
  async function init(){
@@ -66,8 +66,12 @@
     title="ACADEMIC PROGRESS REPORT";body='<div class="ps-meta"><div><small>Student</small><b>'+esc(s.student_no+' · '+s.first_name+' '+s.last_name)+'</b></div><div><small>Reporting period</small><b>'+esc(term?.name||"All available terms")+'</b></div></div>'+table(["Assessment","Subject","Type","Score","Maximum","Teacher comment"],(r.data||[]).map(x=>[x.assessments?.title,x.assessments?.subjects?.name,x.assessments?.assessment_type,fmt(x.score),fmt(x.assessments?.max_score),x.teacher_comment||"—"]))+'<p class="ps-note">This is an academic progress extract, not a final report card. School-approved grading, aggregates, conduct remarks and signatures must be configured before official term report cards are issued.</p>';
    } else if(type==="attendance"){
     if(!cid)throw Error("Select a class for the attendance register.");let query=db.from("attendance").select("attendance_date,status,session,students(student_no,first_name,last_name)").eq("class_id",cid).eq("attendance_date",day).order("created_at");const r=await query.limit(500);if(r.error)throw r.error;title="CLASS ATTENDANCE REGISTER";body='<div class="ps-meta"><div><small>Class</small><b>'+esc(cl?.name)+'</b></div><div><small>Date</small><b>'+esc(day)+'</b></div></div>'+table(["No.","Student","Session","Attendance status","Staff initials"],(r.data||[]).map((x,i)=>[i+1,(x.students?.student_no||"")+" · "+(x.students?.first_name||"")+" "+(x.students?.last_name||""),x.session,x.status,""]));
+   } else if(type==="circular"){
+    const circular=(window.bcsPrintCirculars||[]).find(x=>x.id===$("psCircular").value);if(!circular)throw Error("Select a saved school circular.");
+    title="OFFICIAL SCHOOL CIRCULAR";ref=circular.reference_no||"BCS CIRCULAR";
+    body='<div class="ps-meta"><div><small>Reference</small><b>'+esc(circular.reference_no||"Not assigned")+'</b></div><div><small>Date issued</small><b>'+esc(circular.issued_on||"Not recorded")+'</b></div><div><small>Audience</small><b>'+esc(circular.audience||"School community")+'</b></div><div><small>Document status</small><b>School circular</b></div></div><h2 class="ps-circular-title">'+esc(circular.title)+'</h2><div class="ps-circular-body">'+esc(circular.body).replace(/\\r?\\n/g,"<br>")+'</div><div class="ps-sign"><span>Head Teacher: ____________________</span><span>Official stamp: ____________________</span></div>';
    } else {
-    throw Error("Circular printing is not yet connected to full circular body retrieval. Use the Circulars module until that document template is completed.");
+    throw Error("Unsupported document type.");
    }
    $("psPreview").innerHTML='<article class="ps-paper">'+watermark()+header(title,ref)+body+footer()+'</article>';$("psPrint").disabled=false;$("psMsg").textContent="Preview ready. Use Print / Save PDF to print or save a PDF copy.";
   }catch(e){$("psPreview").innerHTML='<div class="empty">'+esc(e.message||"Could not generate document.")+'</div>';$("psPrint").disabled=true;$("psMsg").textContent=e.message||"Document generation failed.";}
