@@ -36,21 +36,14 @@ The school identity and contact details are preloaded from the school's public w
 Official fee schedules, current academic dates, subject combinations, grading scales and student/staff records are not invented or preloaded; they must be confirmed by school leadership.
 
 ## First administrator setup
-1. Open the portal and create the first account using `info@bukedeacomprehensive.ac.ug` (only if the school controls this mailbox and has approved its use).
-2. Confirm the email and sign in once so Supabase creates the profile.
-3. In Supabase SQL Editor, promote that account using its exact approved email:
-
-```sql
-update public.profiles
-set role = 'school_admin', full_name = 'School Administrator'
-where lower(email) = lower('info@bukedeacomprehensive.ac.ug');
-```
-
-4. Sign out and sign back in. Do not promote an account until the school has approved its owner. Never share passwords or secret keys.
+1. The designated initial School Administrator account is `worldbridan3@gmail.com` (approved by the project operator for this setup).
+2. This account already exists in Supabase Auth and its profile has been assigned the `school_admin` role.
+3. Sign out of the BCS portal and sign back in with this email so the refreshed session loads the administrator permissions. Use the account's existing private password; never place passwords or secret keys in this repository.
+4. Before production handover, the school should formally approve the administrator and may nominate additional staff administrators.
 
 ## School approval still needed before production
 - Official school badge file and approval of the preloaded motto, address and contact details
-- Nominated administrator email and staff account list
+- School leadership's formal approval of the initial administrator and the staff account list
 - Actual classes, streams, subjects, academic years and term dates
 - Official grading scale and report-card layout
 - Fee categories, invoice numbering, payment methods and receipt requirements
