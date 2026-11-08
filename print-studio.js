@@ -15,7 +15,7 @@
   document.querySelector("main footer").before(s);
  }
  function show(){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="printstudio"));document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.page==="printstudio"));$("title").textContent="Print Studio";$("subtitle").textContent="Official school documents, beautifully presented and ready to print."; }
- function badge(){return localStorage.getItem(badgeKey)||window.BCS_BADGE_DATA_URL||"";}
+ function badge(){return window.BCS_BADGE_DATA_URL||localStorage.getItem(badgeKey)||"";}
  function logo(size=76){const u=badge();return u?'<img class="ps-logo" src="'+esc(u)+'" alt="School badge">':'<div class="ps-logo-fallback">BCS</div>';}
  function header(title,ref){return '<header class="ps-head">'+logo()+'<div class="ps-school"><h1>'+esc(school.name)+'</h1><div class="ps-motto">'+esc(school.motto)+'</div><div>'+esc(school.address)+'</div><div>'+esc(school.phone)+' · '+esc(school.email)+'</div></div><div class="ps-ref">'+esc(ref||"OFFICIAL SCHOOL RECORD")+'</div></header><div class="ps-doc-title">'+esc(title)+'</div>';}
  function footer(){return '<footer class="ps-foot"><b>'+esc(school.motto)+'</b><br>Prepared through the BCS Digital Campus · Developed by BridanX Tech LLC</footer>';}
