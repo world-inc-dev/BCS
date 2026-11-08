@@ -131,16 +131,56 @@
   }
 
   window.renderStudents = function () {
-    const q = ($("studentSearch").value || "").toLowerCase();
-    const rows = currentStudents.filter((s) =>
-      (s.first_name + " " + (s.middle_name || "") + " " + s.last_name + " " + s.student_no).toLowerCase().includes(q)
-    );
-    $("studentsBody").innerHTML = rows.map((s) =>
-      "<tr><td><b>" + safe([s.first_name,s.middle_name,s.last_name].filter(Boolean).join(" ")) +
-      "</b></td><td>" + safe(s.student_no) + "</td><td>" +
-      safe(s.enrollments && s.enrollments[0] && s.enrollments[0].classes ? s.enrollments[0].classes.name : "Not enrolled") +
-      '</td><td><span class="pill">' + safe(s.status) + '</span> <button class="btn small secondary" type="button" onclick="openStudentProfile(\'' + safe(s.id) + '\')">View profile</button></td></tr>'
-    ).join("") || '<tr><td colspan="4" class="empty">No matching authorised records.</td></tr>';
+    const input = $("studentSearch");
+    const raw = input ? input.value : "";
+    const normalise = value => String(value == null ? "" : value)
+      .normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9@.+-]+/g, " ").trim();
+    const terms = normalise(raw).split(/\\s+/).filter(Boolean);
+    const searchableText = s => {
+      const classNames = (Array.isArray(s.enrollments) ? s.enrollments : s.enrollments ? [s.enrollments] : [])
+        .map(e => e && e.classes ? (Array.isArray(e.classes) ? e.classes.map(c => c.name).join(" ") : e.classes.name) : "")
+        .join(" ");
+      return normalise([
+        s.student_no, s.first_name, s.middle_name, s.last_name,
+        [s.first_name,s.middle_name,s.last_name].filter(Boolean).join(" "),
+        s.sex, s.status, s.date_of_birth, s.admission_date, s.address,
+        s.guardian_name, s.guardian_relationship, s.guardian_phone,
+        s.guardian_alt_phone, s.guardian_email, s.guardian_address,
+        s.father_name, s.father_phone, s.mother_name, s.mother_phone,
+        s.emergency_contact_name, s.emergency_contact_relationship,
+        s.emergency_contact_phone, s.former_school, s.former_school_address,
+        s.former_school_contact, s.previous_class, s.last_school_year,
+        s.transfer_certificate_no, s.boarding_status, s.transport_details,
+        classNames
+      ].filter(Boolean).join(" "));
+    };
+    const rows = currentStudents.filter(s => {
+      if (!terms.length) return true;
+      const haystack = searchableText(s);
+      return terms.every(term => haystack.includes(term));
+    });
+    const count = $("studentSearchCount");
+    if (count) count.textContent = raw.trim()
+      ? "Showing " + rows.length.toLocaleString("en-UG") + " of " + currentStudents.length.toLocaleString("en-UG") + " students"
+      : currentStudents.length.toLocaleString("en-UG") + " authorised student records";
+    const body = $("studentsBody");
+    if (!body) return;
+    body.innerHTML = rows.map((s) => {
+      const name = [s.first_name,s.middle_name,s.last_name].filter(Boolean).join(" ");
+      const enrolments = Array.isArray(s.enrollments) ? s.enrollments : s.enrollments ? [s.enrollments] : [];
+      const className = enrolments.map(e => e && e.classes ? (Array.isArray(e.classes) ? e.classes.map(c=>c.name).join(", ") : e.classes.name) : "").filter(Boolean).join(", ") || "Not enrolled";
+      return "<tr><td><b>" + safe(name) +
+        "</b><small class='muted' style='display:block'>" + safe(s.guardian_name || s.guardian_phone || "") + "</small></td><td>" + safe(s.student_no || "—") + "</td><td>" +
+        safe(className) +
+        '</td><td><span class="pill">' + safe(s.status || "—") + '</span> <button class="btn small secondary" type="button" onclick="openStudentProfile(\'' + safe(s.id) + '\')">View profile</button></td></tr>';
+    }).join("") || '<tr><td colspan="4" class="empty">No matching authorised records. Try a different name, admission number, guardian contact, class or other detail.</td></tr>';
+  };
+
+  window.clearStudentSearch = function () {
+    const input = $("studentSearch");
+    if (input) { input.value = ""; input.focus(); }
+    window.renderStudents();
   };
 
   const profileField = (label, value) => '<div class="profile-field"><small>' + label + '</small><b>' + (value ? safe(String(value)) : '<span class="muted">Not provided</span>') + '</b></div>';
