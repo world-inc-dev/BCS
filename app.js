@@ -238,7 +238,7 @@
         transfer_certificate_no:$("newTransferCertificate").value.trim() || null,
         boarding_status:$("newBoardingStatus").value || null,
         transport_details:$("newTransportDetails").value.trim() || null };
-      const r = await db.from("students").insert(payload).select("id").single();
+      const r = await db.from("students").insert(payload);
       if (r.error) throw r.error;
       await Promise.all([loadStudents(), loadDashboard()]);
       studentForm.reset();
