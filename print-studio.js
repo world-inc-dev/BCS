@@ -34,12 +34,12 @@
     db.from("school_settings").select("*").limit(1).maybeSingle()
    ]);
    if(!st.error)students=st.data||[];if(!cl.error)classes=cl.data||[];if(!tr.error)terms=tr.data||[];
-   if(ss.data){school={...school,name:ss.data.school_name||school.name,motto:ss.data.motto||school.motto,address:ss.data.address||school.address,phone:ss.data.phone||school.phone,email:ss.data.email||school.email};}
+   if(ss.data){school={...school,name:ss.data.school_name||school.name,motto:ss.data.motto||school.motto,address:ss.data.address||school.address,phone:ss.data.phone||school.phone,email:ss.data.email||school.email};if(ss.data.badge_url)localStorage.setItem(badgeKey,ss.data.badge_url);}
   }catch(e){console.warn("Print Studio data",e);}
   $("psStudent").innerHTML='<option value="">Select student (if applicable)</option>'+students.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.student_no)+' · '+esc(x.first_name+' '+x.last_name)+'</option>').join("");
   $("psClass").innerHTML='<option value="">Select class (if applicable)</option>'+classes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
   $("psTerm").innerHTML='<option value="">Select term (if applicable)</option>'+terms.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name+' · '+x.starts_on+' to '+x.ends_on)+'</option>').join("");
-  $("psBadgeUrl").value=badge();refreshBadge();$("psSaveBadge").onclick=()=>{localStorage.setItem(badgeKey,$("psBadgeUrl").value.trim());refreshBadge();$("psMsg").textContent="Badge setting saved in this browser.";};
+  $("psBadgeUrl").value=badge();refreshBadge();$("psSaveBadge").onclick=async()=>{const url=$("psBadgeUrl").value.trim();const r=await db.from("school_settings").update({badge_url:url||null}).eq("id",true);if(r.error){$("psMsg").textContent="Could not save school-wide badge: "+r.error.message;return;}localStorage.setItem(badgeKey,url);refreshBadge();$("psMsg").textContent="Official badge saved to school settings.";};
   $("psGenerate").onclick=generate;$("psPrint").onclick=()=>window.print();
  }
  function refreshBadge(){$("psBadgePreview").innerHTML=logo();}
