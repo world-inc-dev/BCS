@@ -14,7 +14,7 @@ A school operations portal developed by BridanX Tech LLC.
 - Fee categories, student invoices and receipt records for payments already received
 - School circulars, announcements, bursar expense records and live operational summaries
 - Bursar payment recording for money already received by the school (no payment processing)
-- Published announcements
+- Published announcements and printable school circulars\n- Branded Print Studio for payment receipts, student fee statements, student profiles, academic progress extracts, attendance registers and circulars; print layouts include a school identity header, motto, footer and badge watermark
 - Role model and Row Level Security across all exposed school tables
 - Dedicated Supabase project, separate from BridanX Business Manager
 
@@ -42,7 +42,7 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 4. Before production handover, the school should formally approve the administrator and may nominate additional staff administrators.
 
 ## School approval still needed before production
-- Official school badge file and approval of the preloaded motto, address and contact details
+- Upload/confirm the official school badge and save its approved image URL in Print Studio → Document branding; the badge watermark falls back to a BCS monogram until the authentic crest is supplied\n- Approval of the preloaded motto, address and contact details
 - School leadership's formal approval of the initial administrator and the staff account list
 - Actual classes, streams, subjects, academic years and term dates
 - Official grading scale and report-card layout
