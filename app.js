@@ -150,11 +150,12 @@
     button.disabled = true;
     $("studentCreateMsg").textContent = "Saving student record…";
     try {
-      const payload = { first_name:first, middle_name:middle || null, last_name:last, student_no:code };
+      const admissionDate = $("newStudentAdmission").value; const dob = $("newStudentDob").value; if (dob && admissionDate && dob > admissionDate) { $("studentCreateMsg").textContent = "Date of birth cannot be later than the admission date."; return; } const payload = { first_name:first, middle_name:middle || null, last_name:last, student_no:code, sex:$("newStudentSex").value || null, date_of_birth:dob || null, admission_date:admissionDate, status:$("newStudentStatus").value, address:$("newStudentAddress").value.trim() || null, photo_url:$("newStudentPhoto").value.trim() || null, medical_notes:$("newStudentMedical").value.trim() || null };
       const r = await db.from("students").insert(payload).select("id").single();
       if (r.error) throw r.error;
       await Promise.all([loadStudents(), loadDashboard()]);
       studentForm.reset();
+      $("newStudentAdmission").value = new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Kampala"});
       $("studentCreateMsg").textContent = "Student record saved successfully. Open Enrolment to assign the student to a class and academic year.";
     } catch (error) {
       $("studentCreateMsg").textContent = "Could not save student: " + (error?.message || "Unexpected error. Please try again.");
