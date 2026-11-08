@@ -151,7 +151,28 @@
     button.disabled = true;
     $("studentCreateMsg").textContent = "Saving student record…";
     try {
-      const admissionDate = $("newStudentAdmission").value; const dob = $("newStudentDob").value; if (dob && admissionDate && dob > admissionDate) { $("studentCreateMsg").textContent = "Date of birth cannot be later than the admission date."; return; } const payload = { first_name:first, middle_name:middle || null, last_name:last, student_no:code, sex:$("newStudentSex").value || null, date_of_birth:dob || null, admission_date:admissionDate, status:$("newStudentStatus").value, address:$("newStudentAddress").value.trim() || null, photo_url:$("newStudentPhoto").value.trim() || null, medical_notes:$("newStudentMedical").value.trim() || null };
+      const admissionDate = $("newStudentAdmission").value; const dob = $("newStudentDob").value; if (dob && admissionDate && dob > admissionDate) { $("studentCreateMsg").textContent = "Date of birth cannot be later than the admission date."; return; } const payload = { first_name:first, middle_name:middle || null, last_name:last, student_no:code, sex:$("newStudentSex").value || null, date_of_birth:dob || null, admission_date:admissionDate, status:$("newStudentStatus").value, address:$("newStudentAddress").value.trim() || null, photo_url:$("newStudentPhoto").value.trim() || null, medical_notes:$("newStudentMedical").value.trim() || null,
+        guardian_name:$("newGuardianName").value.trim() || null,
+        guardian_relationship:$("newGuardianRelationship").value || null,
+        guardian_phone:$("newGuardianPhone").value.trim() || null,
+        guardian_alt_phone:$("newGuardianAltPhone").value.trim() || null,
+        guardian_email:$("newGuardianEmail").value.trim() || null,
+        guardian_address:$("newGuardianAddress").value.trim() || null,
+        father_name:$("newFatherName").value.trim() || null,
+        father_phone:$("newFatherPhone").value.trim() || null,
+        mother_name:$("newMotherName").value.trim() || null,
+        mother_phone:$("newMotherPhone").value.trim() || null,
+        emergency_contact_name:$("newEmergencyName").value.trim() || null,
+        emergency_contact_relationship:$("newEmergencyRelationship").value.trim() || null,
+        emergency_contact_phone:$("newEmergencyPhone").value.trim() || null,
+        former_school:$("newFormerSchool").value.trim() || null,
+        former_school_address:$("newFormerSchoolAddress").value.trim() || null,
+        former_school_contact:$("newFormerSchoolContact").value.trim() || null,
+        previous_class:$("newPreviousClass").value.trim() || null,
+        last_school_year:$("newLastSchoolYear").value.trim() || null,
+        transfer_certificate_no:$("newTransferCertificate").value.trim() || null,
+        boarding_status:$("newBoardingStatus").value || null,
+        transport_details:$("newTransportDetails").value.trim() || null };
       const r = await db.from("students").insert(payload).select("id").single();
       if (r.error) throw r.error;
       await Promise.all([loadStudents(), loadDashboard()]);
