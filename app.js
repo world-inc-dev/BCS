@@ -73,17 +73,19 @@
     const money = n => "UGX " + Number(n||0).toLocaleString("en-UG",{maximumFractionDigits:0});
     const count = await db.from("students").select("id",{count:"exact",head:true});
     if (!count.error && count.count != null) $("studentCount").textContent = count.count.toLocaleString("en-UG");
-    const [attendance,payments,invoices] = await Promise.all([
+    const [attendance,paymentsToday,invoices,paymentsAll] = await Promise.all([
       db.from("attendance").select("status").eq("attendance_date",today),
-      db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00"),
-      db.from("student_invoices").select("amount_due")
+      db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00").lt("received_at",today+"T24:00:00+03:00"),
+      db.from("student_invoices").select("id,amount_due"),
+      db.from("payment_records").select("invoice_id,amount")
     ]);
     if (!attendance.error) $("presentToday").textContent = (attendance.data||[]).filter(x=>String(x.status).toLowerCase()==="present").length.toLocaleString("en-UG");
-    if (!payments.error) $("feesRecorded").textContent = money((payments.data||[]).reduce((n,x)=>n+Number(x.amount||0),0));
-    if (!payments.error && !invoices.error) {
-      const due=(invoices.data||[]).reduce((n,x)=>n+Number(x.amount_due||0),0);
-      const paid=(payments.data||[]).reduce((n,x)=>n+Number(x.amount||0),0);
-      $("feeBalance").textContent=money(Math.max(0,due-paid));
+    if (!paymentsToday.error) $("feesRecorded").textContent = money((paymentsToday.data||[]).reduce((n,x)=>n+Number(x.amount||0),0));
+    if (!invoices.error && !paymentsAll.error) {
+      const paidByInvoice = new Map();
+      (paymentsAll.data||[]).forEach(x=>{if(x.invoice_id)paidByInvoice.set(x.invoice_id,(paidByInvoice.get(x.invoice_id)||0)+Number(x.amount||0));});
+      const outstanding=(invoices.data||[]).reduce((n,x)=>n+Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)),0);
+      $("feeBalance").textContent=money(outstanding);
     }
   }
 
