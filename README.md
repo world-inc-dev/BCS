@@ -26,7 +26,7 @@ A school operations portal developed by BridanX Tech LLC.
 
 ## Official school identity
 The school identity and contact details are preloaded from the school's public website:
-- Motto: `Be A Force For Good`
+- Motto: `Knowledge & Innovation`
 - Address: Bukedea Town, Bukedea District, Eastern Uganda; P.O. Box 195, Bukedea, Uganda
 - Telephone: `+256 (0) 700 000 000`
 - Email: `info@bukedeacomprehensive.ac.ug`
@@ -42,7 +42,7 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 4. Before production handover, the school should formally approve the administrator and may nominate additional staff administrators.
 
 ## School approval still needed before production
-- Upload/confirm the official school badge and save its approved image URL in Print Studio → Document branding; the badge watermark falls back to a BCS monogram until the authentic crest is supplied\n- Approval of the preloaded motto, address and contact details
+- The official school crest supplied by the school must be installed as the shared document badge and watermark across all print templates.\n- Approval of the preloaded motto, address and contact details
 - School leadership's formal approval of the initial administrator and the staff account list
 - Actual classes, streams, subjects, academic years and term dates
 - Official grading scale and report-card layout
