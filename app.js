@@ -75,7 +75,7 @@
     if (!count.error && count.count != null) $("studentCount").textContent = count.count.toLocaleString("en-UG");
     const [attendance,paymentsToday,invoices,paymentsAll] = await Promise.all([
       db.from("attendance").select("status").eq("attendance_date",today),
-      db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00").lt("received_at",today+"T24:00:00+03:00"),
+      db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00").lt("received_at",new Date(Date.parse(today+"T00:00:00+03:00")+86400000).toISOString()),
       db.from("student_invoices").select("id,amount_due"),
       db.from("payment_records").select("invoice_id,amount")
     ]);
