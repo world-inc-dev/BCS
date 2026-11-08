@@ -69,5 +69,12 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 - Security advisor still flags the intentionally privileged role-assignment RPC for review and leaked-password protection as disabled. Enable leaked-password protection before production.
 - Performance advisor reports multiple permissive-policy and unused-index notices; review them after real workload testing rather than dropping indexes blindly.
 
+## Current security review
+- Row Level Security is enabled on all 23 public school tables.
+- The role-assignment RPC is restricted to authenticated users and checks administrator/director permissions in the database; only an existing school administrator can grant the school-admin role.
+- Supabase health advisor currently reports no health lints.
+- Security advisor still flags the intentionally privileged role-assignment RPC for review and leaked-password protection as disabled. Enable leaked-password protection before production.
+- Performance advisor reports multiple permissive-policy and unused-index notices; review them after real workload testing rather than dropping indexes blindly.
+
 ## Hosting
 The repository includes a GitHub Actions Pages workflow. In repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions** if it is not already enabled.
