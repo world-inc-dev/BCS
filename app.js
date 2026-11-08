@@ -126,6 +126,7 @@
     }
     if (!panel) return alert("Student registration form is unavailable. Please refresh the portal.");
     panel.hidden = false;
+    if ($("newStudentAdmission") && !$("newStudentAdmission").value) $("newStudentAdmission").value = new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Kampala"});
     $("studentCreateMsg").textContent = "Enter the student's official details. Class placement is completed in Enrolment after classes and an academic year are configured.";
     $("newStudentFirst").focus();
   };
