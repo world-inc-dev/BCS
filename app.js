@@ -38,6 +38,7 @@
     $("userRole").textContent = roles[profile.role] || profile.role;
     $("userAvatar").textContent = (profile.full_name || user.email).slice(0,2).toUpperCase();
     await Promise.all([loadStudents(), loadAnnouncements(), loadDashboard()]);
+    startLiveSync();
   }
 
   window.signIn = async function () {
@@ -87,6 +88,31 @@
       const outstanding=(invoices.data||[]).reduce((n,x)=>n+Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)),0);
       $("feeBalance").textContent=money(outstanding);
     }
+  }
+
+  let liveSyncStarted = false, liveRefreshTimer = null;
+  function startLiveSync() {
+    if (liveSyncStarted) return;
+    liveSyncStarted = true;
+    let queued = false;
+    const refreshVisibleData = async () => {
+      if (!profile || document.hidden || queued) return;
+      queued = true;
+      try { await Promise.allSettled([loadStudents(), loadAnnouncements(), loadDashboard()]); }
+      finally { queued = false; }
+    };
+    const channel = db.channel("bcs-live-school-updates")
+      .on("postgres_changes", {event:"*",schema:"public",table:"students"}, refreshVisibleData)
+      .on("postgres_changes", {event:"*",schema:"public",table:"enrollments"}, refreshVisibleData)
+      .on("postgres_changes", {event:"*",schema:"public",table:"attendance"}, refreshVisibleData)
+      .on("postgres_changes", {event:"*",schema:"public",table:"student_invoices"}, refreshVisibleData)
+      .on("postgres_changes", {event:"*",schema:"public",table:"payment_records"}, refreshVisibleData)
+      .on("postgres_changes", {event:"*",schema:"public",table:"announcements"}, refreshVisibleData)
+      .subscribe();
+    // Polling is a fallback when Realtime is unavailable or the device reconnects.
+    liveRefreshTimer = window.setInterval(refreshVisibleData, 60000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshVisibleData(); });
+    window.addEventListener("online", refreshVisibleData);
   }
 
   async function loadStudents() {
