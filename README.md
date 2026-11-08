@@ -6,7 +6,13 @@ A school operations portal developed by BridanX Tech LLC.
 - Responsive school portal interface
 - Supabase email/password authentication
 - Parent self-registration; new accounts receive the restricted parent role
-- Live student record listing and authorised student admission
+- Live student record listing, authorised student admission and class enrolment
+- Academic year, term, class, subject and class-subject setup
+- Daily attendance registers for enrolled students
+- Assessment creation and teacher mark entry with score validation
+- Verified guardian-to-student linking and a parent portal with attendance, assessment and fee summaries
+- Fee categories, student invoices and receipt records for payments already received
+- School circulars, announcements, bursar expense records and live operational summaries
 - Bursar payment recording for money already received by the school (no payment processing)
 - Published announcements
 - Role model and Row Level Security across all exposed school tables
@@ -17,6 +23,17 @@ A school operations portal developed by BridanX Tech LLC.
 - Region: `eu-central-1` (Frankfurt)
 - API URL: `https://ynacnystxmlfvyqetovu.supabase.co`
 - Browser app uses a publishable key. Never put a service-role/secret key in this repository.
+
+## Official school identity
+The school identity and contact details are preloaded from the school's public website:
+- Motto: `Be A Force For Good`
+- Address: Bukedea Town, Bukedea District, Eastern Uganda; P.O. Box 195, Bukedea, Uganda
+- Telephone: `+256 (0) 700 000 000`
+- Email: `info@bukedeacomprehensive.ac.ug`
+- Website: `https://www.bukedeacomprehensiveschool.com/`
+- Curriculum: Uganda National Curriculum, O'Level (S1–S4) and A'Level (S5–S6), with UCE/UACE examinations
+
+Official fee schedules, current academic dates, subject combinations, grading scales and student/staff records are not invented or preloaded; they must be confirmed by school leadership.
 
 ## First administrator setup
 1. Open the portal and create the first account using the school's nominated administrator email.
@@ -32,7 +49,7 @@ where lower(email) = lower('REPLACE-WITH-APPROVED-SCHOOL-ADMIN-EMAIL');
 4. Sign out and sign back in. Do not promote an account until the school has approved its owner. Never share passwords or secret keys.
 
 ## School approval still needed before production
-- Official school badge, motto, address, contacts and approved portal domain
+- Official school badge file and approval of the preloaded motto, address and contact details
 - Nominated administrator email and staff account list
 - Actual classes, streams, subjects, academic years and term dates
 - Official grading scale and report-card layout
