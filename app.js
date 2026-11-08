@@ -69,16 +69,21 @@
   };
 
   async function loadDashboard() {
-    const r = await db.from("students").select("id", { count: "exact", head: true });
-    if (!r.error && r.count != null) $("studentCount").textContent = r.count.toLocaleString();
-    const title = $("overview");
-    if (title) {
-      const countEl = title.querySelector(".stats .card:nth-child(2) .statnum");
-      if (countEl) countEl.textContent = "—";
-      const feeEl = title.querySelector(".stats .card:nth-child(3) .statnum");
-      if (feeEl) feeEl.textContent = "UGX —";
-      const balanceEl = title.querySelector(".stats .card:nth-child(4) .statnum");
-      if (balanceEl) balanceEl.textContent = "UGX —";
+    const today = new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Kampala"}).format(new Date());
+    const money = n => "UGX " + Number(n||0).toLocaleString("en-UG",{maximumFractionDigits:0});
+    const count = await db.from("students").select("id",{count:"exact",head:true});
+    if (!count.error && count.count != null) $("studentCount").textContent = count.count.toLocaleString("en-UG");
+    const [attendance,payments,invoices] = await Promise.all([
+      db.from("attendance").select("status").eq("attendance_date",today),
+      db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00"),
+      db.from("student_invoices").select("amount_due")
+    ]);
+    if (!attendance.error) $("presentToday").textContent = (attendance.data||[]).filter(x=>String(x.status).toLowerCase()==="present").length.toLocaleString("en-UG");
+    if (!payments.error) $("feesRecorded").textContent = money((payments.data||[]).reduce((n,x)=>n+Number(x.amount||0),0));
+    if (!payments.error && !invoices.error) {
+      const due=(invoices.data||[]).reduce((n,x)=>n+Number(x.amount_due||0),0);
+      const paid=(payments.data||[]).reduce((n,x)=>n+Number(x.amount||0),0);
+      $("feeBalance").textContent=money(Math.max(0,due-paid));
     }
   }
 
