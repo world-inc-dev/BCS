@@ -14,7 +14,10 @@ A school operations portal developed by BridanX Tech LLC.
 - Fee categories, student invoices and receipt records for payments already received
 - School circulars, announcements, bursar expense records and live operational summaries
 - Bursar payment recording for money already received by the school (no payment processing)
-- Published announcements and printable school circulars\n- Branded Print Studio for payment receipts, student fee statements, student profiles, academic progress extracts, attendance registers and circulars; print layouts include a school identity header, motto, footer and badge watermark
+- Published announcements and printable school circulars
+- Staff directory and role assignment for existing registered accounts, protected by the administrator role-assignment RPC
+- Confidential payroll entries with gross pay, deductions, net pay, draft/approved/paid status and staff linkage
+- Branded Print Studio for payment receipts, student fee statements, student profiles, academic progress extracts, provisional term reports, attendance registers and circulars; print layouts include the official crest, school motto, footer and badge watermark
 - Role model and Row Level Security across all exposed school tables
 - Dedicated Supabase project, separate from BridanX Business Manager
 
@@ -42,7 +45,9 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 4. Before production handover, the school should formally approve the administrator and may nominate additional staff administrators.
 
 ## School approval still needed before production
-- The official school crest supplied by the school must be installed as the shared document badge and watermark across all print templates.\n- Approval of the preloaded motto, address and contact details
+- The official crest supplied in the project conversation is embedded in the portal and used in branding and print layouts.
+- School leadership must approve the final report-card grading scale, assessment aggregation rules and signature authorities.
+- Enable Supabase leaked-password protection in Authentication → Settings → Password Security.
 - School leadership's formal approval of the initial administrator and the staff account list
 - Actual classes, streams, subjects, academic years and term dates
 - Official grading scale and report-card layout
@@ -56,6 +61,13 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 - Use individual accounts; never share staff passwords.
 - The fees module only records payments already received by the school. It is not a payment gateway.
 - Obtain school approval and comply with Uganda's Data Protection and Privacy Act before entering personal student data.
+
+## Current security review
+- Row Level Security is enabled on all 23 public school tables.
+- The role-assignment RPC is restricted to authenticated users and checks administrator/director permissions in the database; only an existing school administrator can grant the school-admin role.
+- Supabase health advisor currently reports no health lints.
+- Security advisor still flags the intentionally privileged role-assignment RPC for review and leaked-password protection as disabled. Enable leaked-password protection before production.
+- Performance advisor reports multiple permissive-policy and unused-index notices; review them after real workload testing rather than dropping indexes blindly.
 
 ## Hosting
 The repository includes a GitHub Actions Pages workflow. In repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions** if it is not already enabled.
