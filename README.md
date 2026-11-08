@@ -64,6 +64,7 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 - Obtain school approval and comply with Uganda's Data Protection and Privacy Act before entering personal student data.
 
 ## Current security review
+- Corrected the private role helper used by school-settings RLS; verified that the school administrator can pass the update policy and execute a school-settings UPDATE (test transaction rolled back without changing data).
 - Payroll staff names are exposed to payroll-authorised roles through a restricted directory table containing only profile ID, display name, role and active status; the full profiles table remains restricted.
 - Payroll checks enforce deductions not exceeding gross pay, net pay consistency, a timestamp for paid entries, sequential approval/payment and locked amounts after approval.
 - Assessment result trigger rejects scores above the assessment maximum.
