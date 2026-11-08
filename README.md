@@ -17,7 +17,7 @@ A school operations portal developed by BridanX Tech LLC.
 - Published announcements and printable school circulars
 - Staff directory and role assignment for existing registered accounts, protected by the administrator role-assignment RPC
 - Confidential payroll entries with gross pay, deductions, net pay, draft/approved/paid status and a limited-name staff directory (no staff phone/email exposed to bursar roles)
-- Database-enforced payroll arithmetic checks and assessment score limits; new payroll entries start in Draft and require separate approval/payment steps
+- Database-enforced payroll arithmetic checks and assessment score limits; payroll entries must follow Draft → Approved → Paid, with financial fields locked after approval
 - Branded Print Studio for payment receipts, student fee statements, student profiles, academic progress extracts, provisional term reports, attendance registers and circulars; print layouts include the official crest, school motto, footer and badge watermark
 - Role model and Row Level Security across all exposed school tables
 - Dedicated Supabase project, separate from BridanX Business Manager
@@ -65,7 +65,7 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 
 ## Current security review
 - Payroll staff names are exposed to payroll-authorised roles through a restricted directory table containing only profile ID, display name, role and active status; the full profiles table remains restricted.
-- Payroll checks enforce deductions not exceeding gross pay, net pay consistency and a timestamp for paid entries.
+- Payroll checks enforce deductions not exceeding gross pay, net pay consistency, a timestamp for paid entries, sequential approval/payment and locked amounts after approval.
 - Assessment result trigger rejects scores above the assessment maximum.
 - Row Level Security is enabled on all 23 public school tables.
 - The role-assignment RPC is restricted to authenticated users and checks administrator/director permissions in the database; only an existing school administrator can grant the school-admin role.
