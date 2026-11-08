@@ -28,7 +28,7 @@
   if(role==="parent"||role==="teacher"||role==="bursar"||role==="registrar"||role==="deputy_head_teacher"||role==="head_teacher"||role==="director"||role==="school_admin"){}
   try{
    const [st,cl,tr,ss,cr]=await Promise.all([
-    db.from("students").select("id,student_no,first_name,last_name,gender,date_of_birth,status").order("last_name"),
+    db.from("students").select("id,student_no,first_name,last_name,sex,date_of_birth,status").order("last_name"),
     db.from("classes").select("id,name").eq("is_active",true).order("name"),
     db.from("terms").select("id,name,starts_on,ends_on").order("starts_on",{ascending:false}),
     db.from("school_settings").select("*").limit(1).maybeSingle(),db.from("circulars").select("id,reference_no,title,body,audience,issued_on").order("issued_on",{ascending:false}).limit(100)
