@@ -117,22 +117,51 @@
     ).join("") || '<tr><td colspan="4" class="empty">No matching authorised records.</td></tr>';
   };
 
-  window.addStudent = async function () {
-    if (!canAdmissions()) return alert("Your account does not have student admission permissions.");
-    const first = prompt("Student first name:");
-    if (!first) return;
-    const last = prompt("Student last name:");
-    if (!last) return;
-    const code = prompt("School admission/student number:");
-    if (!code) return;
-    const r = await db.from("students").insert({
-      first_name: first.trim(), last_name: last.trim(), student_no: code.trim()
-    }).select("id").single();
-    if (r.error) return alert("Could not save student: " + r.error.message);
-    await loadStudents();
-    await loadDashboard();
-    alert("Student record saved. Class enrolment can be completed after the school class and academic-year setup is entered.");
+  window.addStudent = function () {
+    const panel = $("studentFormPanel");
+    if (!canAdmissions()) {
+      if (panel) panel.hidden = true;
+      alert("Student admission is restricted to the registrar, school leadership and authorised administrators.");
+      return;
+    }
+    if (!panel) return alert("Student registration form is unavailable. Please refresh the portal.");
+    panel.hidden = false;
+    $("studentCreateMsg").textContent = "Enter the student's official details. Class placement is completed in Enrolment after classes and an academic year are configured.";
+    $("newStudentFirst").focus();
   };
+
+  window.cancelStudentForm = function () {
+    const form = $("studentCreateForm");
+    if (form) form.reset();
+    if ($("studentFormPanel")) $("studentFormPanel").hidden = true;
+    if ($("studentCreateMsg")) $("studentCreateMsg").textContent = "";
+  };
+
+  const studentForm = $("studentCreateForm");
+  if (studentForm) studentForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!canAdmissions()) return $("studentCreateMsg").textContent = "Your account is not authorised to admit students.";
+    const first = $("newStudentFirst").value.trim();
+    const middle = $("newStudentMiddle").value.trim();
+    const last = $("newStudentLast").value.trim();
+    const code = $("newStudentCode").value.trim();
+    if (!first || !last || !code) return $("studentCreateMsg").textContent = "First name, last name and admission number are required.";
+    const button = $("saveStudentBtn");
+    button.disabled = true;
+    $("studentCreateMsg").textContent = "Saving student record…";
+    try {
+      const payload = { first_name:first, middle_name:middle || null, last_name:last, student_no:code };
+      const r = await db.from("students").insert(payload).select("id").single();
+      if (r.error) throw r.error;
+      await Promise.all([loadStudents(), loadDashboard()]);
+      studentForm.reset();
+      $("studentCreateMsg").textContent = "Student record saved successfully. Open Enrolment to assign the student to a class and academic year.";
+    } catch (error) {
+      $("studentCreateMsg").textContent = "Could not save student: " + (error?.message || "Unexpected error. Please try again.");
+    } finally {
+      button.disabled = false;
+    }
+  });
 
   window.recordPayment = async function () {
     if (!canFinance()) return $("feeMessage").textContent = "Your account does not have bursar permissions.";
