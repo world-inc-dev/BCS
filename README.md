@@ -7,7 +7,7 @@ A school operations portal developed by BridanX Tech LLC.
 - Supabase email/password authentication
 - Parent self-registration; new accounts receive the restricted parent role
 - Live student record listing, authorised student admission and class enrolment
-- Academic year, term, class, subject and class-subject setup
+- Academic year, term, class, subject, class-subject setup and teacher-to-class/class-teacher assignments
 - Daily attendance registers for enrolled students
 - Assessment creation and teacher mark entry with score validation
 - Verified guardian-to-student linking and a parent portal with attendance, assessment and fee summaries
@@ -70,15 +70,9 @@ Official fee schedules, current academic dates, subject combinations, grading sc
 - Row Level Security is enabled on all 23 public school tables.
 - The role-assignment RPC is restricted to authenticated users and checks administrator/director permissions in the database; only an existing school administrator can grant the school-admin role.
 - Supabase health advisor currently reports no health lints.
-- Security advisor still flags the intentionally privileged role-assignment RPC for review and leaked-password protection as disabled. Enable leaked-password protection before production.
-- Performance advisor reports multiple permissive-policy and unused-index notices; review them after real workload testing rather than dropping indexes blindly.
-
-## Current security review
-- Row Level Security is enabled on all 23 public school tables.
-- The role-assignment RPC is restricted to authenticated users and checks administrator/director permissions in the database; only an existing school administrator can grant the school-admin role.
-- Supabase health advisor currently reports no health lints.
-- Security advisor still flags the intentionally privileged role-assignment RPC for review and leaked-password protection as disabled. Enable leaked-password protection before production.
-- Performance advisor reports multiple permissive-policy and unused-index notices; review them after real workload testing rather than dropping indexes blindly.
+- The public role-assignment RPC is now SECURITY INVOKER and delegates to an authenticated, permission-checked function in the non-exposed private schema. The security advisor no longer flags this RPC.
+- Security advisor still flags leaked-password protection as disabled. Enable leaked-password protection before production.
+- Performance advisor reports multiple permissive-policy notices and unused-index information findings. Review query plans after real workload testing; do not drop indexes solely because a new database has not used them yet.
 
 ## Hosting
 The repository includes a GitHub Actions Pages workflow. In repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions** if it is not already enabled.
