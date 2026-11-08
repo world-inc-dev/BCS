@@ -250,25 +250,43 @@
     const panel=$("studentProfilePanel");
     const sheet=panel?.querySelector(".student-profile-sheet");
     if(!sheet){alert("The student profile has not finished loading. Please wait and try again.");return;}
-    const frame=document.createElement("iframe");
-    frame.setAttribute("title","Student profile print preview");
-    frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none";
-    const styles=[...document.querySelectorAll("style")].map(x=>x.textContent).join("\n");
-    const copy=sheet.cloneNode(true);
-    copy.querySelectorAll(".profile-actions").forEach(x=>x.remove());
-    const html="<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Student Profile</title><style>"+styles+"\n"+
-      "body{margin:0;padding:12mm;background:#fff;color:#111;font-family:Arial,sans-serif}.student-profile-sheet{display:block!important;width:100%;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}.profile-section{break-inside:avoid;page-break-inside:avoid;margin:14px 0}.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.profile-field{break-inside:avoid;background:#fff!important;color:#111!important;border:1px solid #bbb!important;padding:8px!important}.profile-field small{display:block;color:#444!important}.profile-field b{color:#111!important}.tablewrap{overflow:visible!important}table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #bbb;padding:5px;color:#111!important}h2,h3{color:#075b60}img{max-width:100%}.profile-print-footer{margin-top:18px;border-top:1px solid #bbb;padding-top:10px;text-align:center;font-size:10px}@page{size:auto;margin:0}"+
-      "</style></head><body><main id='studentProfilePanel'>"+copy.outerHTML+"</main></body></html>";
-    document.body.appendChild(frame);
-    frame.onload=function(){
-      try{
-        frame.contentWindow.onafterprint=function(){frame.remove();};
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
-        setTimeout(()=>{if(frame.isConnected)frame.remove();},60000);
-      }catch(error){frame.remove();alert("Unable to open the print preview: "+error.message);}
+    const content=sheet.cloneNode(true);
+    content.querySelectorAll(".profile-actions").forEach(x=>x.remove());
+    if(!content.textContent.trim()){alert("The student profile contains no printable details yet. Refresh the profile and try again.");return;}
+    const printWindow=window.open("","_blank");
+    if(!printWindow){alert("Your browser blocked the print window. Allow pop-ups for the BCS portal, then try again.");return;}
+    const css=`
+      *{box-sizing:border-box}
+      html,body{margin:0;padding:0;background:#fff!important;color:#111!important;font-family:Arial,Helvetica,sans-serif}
+      body{padding:12mm}
+      .student-profile-sheet{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}
+      .student-profile-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:2px solid #075b60;padding-bottom:12px}
+      .eyebrow{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#075b60}
+      h2{font-size:22px;margin:6px 0;color:#111}h3{font-size:14px;color:#075b60;margin:0 0 8px}
+      .profile-section{margin:15px 0;break-inside:avoid;page-break-inside:avoid}
+      .profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+      .profile-field{min-width:0;padding:8px;border:1px solid #bbb;border-radius:4px;background:#fff!important;color:#111!important;break-inside:avoid}
+      .profile-field small{display:block;font-size:10px;color:#555;margin-bottom:4px}
+      .profile-field b{font-size:12px;color:#111;font-weight:600;overflow-wrap:anywhere}
+      .tablewrap{width:100%;overflow:visible!important}
+      table{width:100%;border-collapse:collapse;font-size:9px}
+      th,td{border:1px solid #aaa;padding:5px;text-align:left;color:#111!important;overflow-wrap:anywhere}
+      .muted{color:#444!important}.notice{border:1px solid #aaa;padding:8px}
+      .student-profile-photo{width:95px;height:110px;object-fit:cover;float:right}
+      .profile-print-footer{margin-top:18px;border-top:1px solid #aaa;padding-top:10px;text-align:center;font-size:10px;color:#333}
+      @media(max-width:600px){body{padding:6mm}.profile-fields{grid-template-columns:1fr}.student-profile-head{display:block}}
+      @page{size:auto;margin:0}
+    `;
+    printWindow.document.open();
+    printWindow.document.write("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>BCS Student Profile</title><style>"+css+"</style></head><body>"+content.outerHTML+"</body></html>");
+    printWindow.document.close();
+    printWindow.onload=function(){
+      printWindow.focus();
+      setTimeout(function(){
+        try{printWindow.print();}
+        catch(error){alert("Unable to open print preview: "+error.message);}
+      },500);
     };
-    frame.srcdoc=html;
   };
 
   window.addStudent = function () {
