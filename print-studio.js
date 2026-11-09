@@ -34,13 +34,13 @@
     db.from("terms").select("id,name,starts_on,ends_on").order("starts_on",{ascending:false}),
     db.from("school_settings").select("*").limit(1).maybeSingle(),db.from("circulars").select("id,reference_no,title,body,audience,issued_on,attachment_url").order("issued_on",{ascending:false}).limit(100)
    ]);
-   if(!st.error)students=st.data||[];if(!cl.error)classes=cl.data||[];if(!tr.error)terms=tr.data||[];
+   const dataIssues=[st.error&&"Student list",cl.error&&"Class list",tr.error&&"Term list",ss.error&&"School identity settings",cr.error&&"Circular list"].filter(Boolean);if(!st.error)students=st.data||[];if(!cl.error)classes=cl.data||[];if(!tr.error)terms=tr.data||[];
    if(ss.data){school={...school,name:ss.data.school_name||school.name,motto:"Knowledge & Innovation",address:ss.data.address||school.address,phone:ss.data.phone||school.phone,email:ss.data.email||school.email};}window.bcsPrintCirculars=cr.error?[]:(cr.data||[]);
-  }catch(e){console.warn("Print Studio data",e);}
+  }catch(e){console.warn("Print Studio data",e);$("psMsg").textContent="Print Studio data could not be loaded: "+(e.message||"Check your connection and permissions.");}
   $("psStudent").innerHTML='<option value="">Select student (if applicable)</option>'+students.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.student_no)+' · '+esc(x.first_name+' '+x.last_name)+'</option>').join("");
   $("psClass").innerHTML='<option value="">Select class (if applicable)</option>'+classes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
   $("psCircular").innerHTML='<option value="">Select circular</option>'+(window.bcsPrintCirculars||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc((x.reference_no||"")+" · "+x.title)+'</option>').join("");$("psTerm").innerHTML='<option value="">Select term (if applicable)</option>'+terms.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name+' · '+x.starts_on+' to '+x.ends_on)+'</option>').join("");
-  refreshBadge();
+  refreshBadge();if(dataIssues.length)$("psMsg").textContent="Some Print Studio data could not load: "+dataIssues.join(", ")+". Check your account permissions and connection.";
   $("psGenerate").onclick=generate;$("psPrint").onclick=()=>window.print();
  }
  function refreshBadge(){$("psBadgePreview").innerHTML=logo();}
