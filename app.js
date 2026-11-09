@@ -261,7 +261,7 @@
       *{box-sizing:border-box}
       html,body{margin:0;padding:0;background:#fff!important;color:#111!important;font-family:Arial,Helvetica,sans-serif}
       body{padding:12mm}
-      .student-profile-sheet{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}
+      .student-profile-sheet{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}.student-profile-watermark{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;opacity:.08!important;pointer-events:none!important;z-index:0!important}.student-profile-watermark img{width:min(420px,72%)!important;max-height:60%!important;object-fit:contain!important;filter:grayscale(1)!important}.student-profile-sheet>*:not(.student-profile-watermark){position:relative;z-index:1}.student-profile-schoolbrand{display:flex;align-items:flex-start;gap:14px;min-width:0}.student-profile-schoolbrand>img{width:68px;height:68px;object-fit:contain;flex:0 0 auto}
       .student-profile-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:2px solid #075b60;padding-bottom:12px}
       .eyebrow{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#075b60}
       h2{font-size:22px;margin:6px 0;color:#111}h3{font-size:14px;color:#075b60;margin:0 0 8px}
