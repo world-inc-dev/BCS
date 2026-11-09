@@ -33,6 +33,8 @@
       return;
     }
     profile = p.data;
+    const announcementForm = $("noticeForm");
+    if (announcementForm) announcementForm.hidden = !canPublish();
     $("login").style.display = "none";
     $("userName").textContent = profile.full_name || user.email;
     $("userRole").textContent = roles[profile.role] || profile.role;
@@ -232,7 +234,7 @@
     const markRows=marks.map(x=>{const a=x.assessments||{};return '<tr><td>'+safe(a.title||"Assessment")+'</td><td>'+safe(a.subjects?.name||"—")+'</td><td>'+safe(a.terms?.name||"—")+'</td><td>'+safe(x.score)+' / '+safe(a.max_score||"—")+'</td><td>'+safe(a.assessment_date||"—")+'</td><td>'+safe(x.teacher_comment||"—")+'</td></tr>';});
     const invoiceRows=inv.map(x=>'<tr><td>'+safe(x.invoice_no||"—")+'</td><td>'+safe(x.description||"—")+'</td><td>'+safe(x.due_date||"—")+'</td><td>'+fmt(x.amount_due)+'</td><td>'+fmt(paidByInvoice.get(x.id)||0)+'</td><td>'+fmt(Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)))+'</td></tr>');
     const paymentRows=pay.map(x=>'<tr><td>'+safe(x.received_at||"—")+'</td><td>'+safe(x.receipt_no||"—")+'</td><td>'+safe(x.payment_method||"—")+'</td><td>'+safe(x.payment_reference||"—")+'</td><td>'+fmt(x.amount)+'</td><td>'+safe(x.notes||"—")+'</td></tr>');
-    panel.innerHTML='<div class="card student-profile-sheet"><div class="student-profile-head"><div><div class="eyebrow">Bukedea Comprehensive School</div><h2>'+safe(fullName)+'</h2><p class="muted">Student profile · '+safe(student.student_no)+'</p><b>KNOWLEDGE &amp; INNOVATION</b></div><div class="profile-actions"><button class="btn small" onclick="printStudentProfile()">Print profile</button><button class="btn small secondary" onclick="closeStudentProfile()">Close</button></div></div>'+
+    panel.innerHTML='<div class="card student-profile-sheet"><div class="student-profile-watermark" aria-hidden="true"><img src="'+safe(window.BCS_BADGE_DATA_URL||"")+'" alt=""></div><div class="student-profile-head"><div class="student-profile-schoolbrand">'+(window.BCS_BADGE_DATA_URL?'<img src="'+safe(window.BCS_BADGE_DATA_URL)+'" alt="Official Bukedea Comprehensive School badge">':'')+'<div><div class="eyebrow">Bukedea Comprehensive School</div><h2>'+safe(fullName)+'</h2><p class="muted">Student profile · '+safe(student.student_no)+'</p><b>KNOWLEDGE &amp; INNOVATION</b></div></div><div class="profile-actions"><button class="btn small" onclick="printStudentProfile()">Print profile</button><button class="btn small secondary" onclick="closeStudentProfile()">Close</button></div></div>'+
       (student.photo_url?'<img class="student-profile-photo" src="'+safe(student.photo_url)+'" alt="Student photograph" onerror="this.style.display=\'none\'">':'')+
       profileSection("Personal and admission information",'<div class="profile-fields">'+personal+'</div>')+
       profileSection("Parent, guardian and emergency contacts",'<div class="profile-fields">'+guardian+'</div>')+
@@ -380,29 +382,44 @@
   };
 
   window.publishNotice = async function () {
-    if (!canPublish()) return alert("Your account does not have announcement permissions.");
+    if (!canPublish()) return $("noticeMsg").textContent = "Your account does not have announcement permissions.";
     const title = $("noticeText").value.trim();
-    if (!title) return;
-    const auth = await db.auth.getUser();
-    const r = await db.from("announcements").insert({
-      title: title, body: title, audience: "all", published: true, created_by: auth.data.user.id
-    });
-    if (r.error) return alert("Could not publish announcement: " + r.error.message);
-    $("noticeText").value = "";
-    await loadAnnouncements();
+    const body = $("noticeBody").value.trim();
+    const audience = $("noticeAudience").value || "all";
+    if (!title || !body) return $("noticeMsg").textContent = "Enter both an announcement title and its full message.";
+    const button = $("noticePublishBtn");
+    if (button) button.disabled = true;
+    $("noticeMsg").textContent = "Publishing announcement…";
+    try {
+      const auth = await db.auth.getUser();
+      if (auth.error || !auth.data.user) throw auth.error || new Error("Your session has expired. Sign in again.");
+      const r = await db.from("announcements").insert({
+        title, body, audience, published: true, created_by: auth.data.user.id
+      });
+      if (r.error) throw r.error;
+      $("noticeForm").reset();
+      $("noticeMsg").textContent = "Announcement published successfully.";
+      await loadAnnouncements();
+    } catch (error) {
+      $("noticeMsg").textContent = "Could not publish announcement: " + (error?.message || "Unexpected error.");
+    } finally {
+      if (button) button.disabled = false;
+    }
   };
 
   async function loadAnnouncements() {
     const list = $("noticeList");
-    const r = await db.from("announcements").select("id,title,created_at")
+    if (!list) return;
+    list.innerHTML = '<div class="empty">Loading school announcements…</div>';
+    const r = await db.from("announcements").select("id,title,body,audience,created_at")
       .order("created_at", { ascending: false }).limit(30);
     if (r.error) {
-      list.innerHTML = '<div class="empty">Announcements are not available to this account.</div>';
+      list.innerHTML = '<div class="empty">Announcements are not available to this account: ' + safe(r.error.message) + '</div>';
       return;
     }
     list.innerHTML = (r.data || []).map((n) =>
-      '<div class="row"><span>' + safe(n.title) + '</span><small class="muted">' +
-      new Date(n.created_at).toLocaleDateString() + "</small></div>"
+      '<article class="row" style="align-items:flex-start"><div style="min-width:0;flex:1"><b>' + safe(n.title) + '</b><p style="white-space:pre-wrap;margin:6px 0;color:#c5dce2">' + safe(n.body || n.title) + '</p><small class="muted">Audience: ' + safe(n.audience || "all") + '</small></div><small class="muted">' +
+      new Date(n.created_at).toLocaleDateString("en-UG", {timeZone:"Africa/Kampala"}) + "</small></article>"
     ).join("") || '<div class="empty">No announcements have been published.</div>';
   }
 
