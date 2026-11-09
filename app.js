@@ -75,21 +75,21 @@
     const today = new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Kampala"}).format(new Date());
     const money = n => "UGX " + Number(n||0).toLocaleString("en-UG",{maximumFractionDigits:0});
     const count = await db.from("students").select("id",{count:"exact",head:true});
-    if (!count.error && count.count != null) $("studentCount").textContent = count.count.toLocaleString("en-UG");
+    if (!count.error && count.count != null) $("studentCount").textContent = count.count.toLocaleString("en-UG"); else $("studentCount").textContent = "Unavailable";
     const [attendance,paymentsToday,invoices,paymentsAll] = await Promise.all([
       db.from("attendance").select("status").eq("attendance_date",today),
       db.from("payment_records").select("amount,received_at").gte("received_at",today+"T00:00:00+03:00").lt("received_at",new Date(Date.parse(today+"T00:00:00+03:00")+86400000).toISOString()),
       db.from("student_invoices").select("id,amount_due"),
       db.from("payment_records").select("invoice_id,amount")
     ]);
-    if (!attendance.error) $("presentToday").textContent = (attendance.data||[]).filter(x=>String(x.status).toLowerCase()==="present").length.toLocaleString("en-UG");
-    if (!paymentsToday.error) $("feesRecorded").textContent = money((paymentsToday.data||[]).reduce((n,x)=>n+Number(x.amount||0),0));
+    if (!attendance.error) $("presentToday").textContent = (attendance.data||[]).filter(x=>String(x.status).toLowerCase()==="present").length.toLocaleString("en-UG"); else $("presentToday").textContent = "Unavailable";
+    if (!paymentsToday.error) $("feesRecorded").textContent = money((paymentsToday.data||[]).reduce((n,x)=>n+Number(x.amount||0),0)); else $("feesRecorded").textContent = "Unavailable";
     if (!invoices.error && !paymentsAll.error) {
       const paidByInvoice = new Map();
       (paymentsAll.data||[]).forEach(x=>{if(x.invoice_id)paidByInvoice.set(x.invoice_id,(paidByInvoice.get(x.invoice_id)||0)+Number(x.amount||0));});
       const outstanding=(invoices.data||[]).reduce((n,x)=>n+Math.max(0,Number(x.amount_due||0)-(paidByInvoice.get(x.id)||0)),0);
       $("feeBalance").textContent=money(outstanding);
-    }
+    } else $("feeBalance").textContent = "Unavailable";
   }
 
   let liveSyncStarted = false, liveRefreshTimer = null;
